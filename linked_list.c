@@ -6,62 +6,96 @@
 list_t* list_create(compare_fn compare)
 {
     /* IMPLEMENT THIS */
-    return NULL;
+    list_t* head = NULL;
+    if(compare == NULL){
+        //Assign object size
+        head = (list_t*) malloc(sizeof(list_t));
+        head->compare = NULL;
+    
+    }
+    return head;
 }
 
 // Destroys a list
 void list_destroy(list_t* list)
 {
     /* IMPLEMENT THIS */
+    int index = 0;
+    while(index < list->count){
+        list_node_t* temp = list->head->next;
+        free(list->head);
+        list->head = temp;
+        index++;
+    }
+    //At last node, sets current node to NULL and free current node
+    list_node_t* temp = NULL;
+    free(list->head);
+    list->head = temp;
 }
 
 // Returns head of the list
 list_node_t* list_head(list_t* list)
 {
     /* IMPLEMENT THIS */
-    return NULL;
+    list_node_t* temp = list->head;
+    list_node_t* prev_temp = list->head->prev;
+    //loops until current node prev equals nothing
+    while(prev_temp != NULL || temp->prev != NULL){
+        temp = prev_temp;
+        prev_temp = prev_temp->prev;
+    }
+    return temp;
 }
 
 // Returns tail of the list
 list_node_t* list_tail(list_t* list)
 {
     /* IMPLEMENT THIS */
-    return NULL;
+    return list_end(list);
 }
 
 // Returns next element in the list
 list_node_t* list_next(list_node_t* node)
 {
     /* IMPLEMENT THIS */
-    return NULL;
+    return node->next;
 }
 
 // Returns prev element in the list
 list_node_t* list_prev(list_node_t* node)
 {
     /* IMPLEMENT THIS */
-    return NULL;
+    return node->prev;
 }
 
 // Returns end of the list marker
 list_node_t* list_end(list_t* list)
 {
     /* IMPLEMENT THIS */
-    return NULL;
+    while(list->head != NULL){
+        list->head = list->head->next;
+    }
+    list->tail = list->head->prev;
+    return list->tail;
 }
 
 // Returns data in the given list node
 void* list_data(list_node_t* node)
 {
     /* IMPLEMENT THIS */
-    return NULL;
+    return node->data;
 }
 
 // Returns the number of elements in the list
 size_t list_count(list_t* list)
 {
     /* IMPLEMENT THIS */
-    return 0;
+    while(list->head != NULL){
+        //Change head node and increment count
+        list->head = list->head->next;
+        list->count += 1;
+    }
+    return list->count;
 }
 
 // Finds the first node in the list with the given data
@@ -69,6 +103,14 @@ size_t list_count(list_t* list)
 list_node_t* list_find(list_t* list, void* data)
 {
     /* IMPLEMENT THIS */
+    int index = 0;
+    while(index <= list->count){
+        if(list->head->data == data){
+            return list->head;
+        }
+        list->head = list->head->next;
+        index++;
+    }
     return NULL;
 }
 
@@ -77,11 +119,28 @@ list_node_t* list_find(list_t* list, void* data)
 list_node_t* list_insert(list_t* list, void* data)
 {
     /* IMPLEMENT THIS */
-    return NULL;
+    list_node_t* new_node = (list_node_t*)malloc(sizeof(list_node_t));
+    list_node_t* temp = list->head;
+    new_node->data = data;
+    new_node->prev = temp;
+    list->head = new_node;
+    return new_node;
 }
 
 // Removes a node from the list and frees the node resources
 void list_remove(list_t* list, list_node_t* node)
 {
     /* IMPLEMENT THIS */
+    int index = 0;
+    list_node_t* remove_node = list->head;
+    while(index <= list->count){
+        
+        if(remove_node == node){
+            list->head = remove_node->next;
+            free(remove_node);
+        }
+        remove_node = list->head;
+        list->head = list->head->next;
+        index++;
+    }
 }
