@@ -7,14 +7,14 @@ list_t* list_create(compare_fn compare)
 {
     /* IMPLEMENT THIS */
     list_t* linked_list = (list_t*)malloc(sizeof(list_t));
+    list_node_t* new_node = (list_node_t*)malloc(sizeof(list_node_t));
+    linked_list->count = 0;
+    linked_list->head = NULL;
+    linked_list->tail = NULL;
     if(compare == NULL){
+        linked_list->head = new_node;
         linked_list->compare = compare;
-        linked_list->count = 0;
-        linked_list->head = NULL;
-        linked_list->tail = NULL;
-        return linked_list;
     }
-    linked_list = NULL;
     return linked_list;
 }
 
