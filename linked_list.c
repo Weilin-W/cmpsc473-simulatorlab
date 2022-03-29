@@ -6,14 +6,16 @@
 list_t* list_create(compare_fn compare)
 {
     /* IMPLEMENT THIS */
-    list_t* head = NULL;
+    list_t* linked_list = (list_t*)malloc(sizeof(list_t));
     if(compare == NULL){
-        //Assign object size
-        head = (list_t*) malloc(sizeof(list_t));
-        head->compare = NULL;
-    
+        linked_list->compare = compare;
+        linked_list->count = 0;
+        linked_list->head = NULL;
+        linked_list->tail = NULL;
+        return linked_list;
     }
-    return head;
+    linked_list = NULL;
+    return linked_list;
 }
 
 // Destroys a list
@@ -28,30 +30,22 @@ void list_destroy(list_t* list)
         index++;
     }
     //At last node, sets current node to NULL and free current node
-    list_node_t* temp = NULL;
     free(list->head);
-    list->head = temp;
+    free(list);
 }
 
 // Returns head of the list
 list_node_t* list_head(list_t* list)
 {
     /* IMPLEMENT THIS */
-    list_node_t* temp = list->head;
-    list_node_t* prev_temp = list->head->prev;
-    //loops until current node prev equals nothing
-    while(prev_temp != NULL || temp->prev != NULL){
-        temp = prev_temp;
-        prev_temp = prev_temp->prev;
-    }
-    return temp;
+    return list->head;
 }
 
 // Returns tail of the list
 list_node_t* list_tail(list_t* list)
 {
     /* IMPLEMENT THIS */
-    return list_end(list);
+    return list->tail;
 }
 
 // Returns next element in the list
@@ -120,9 +114,12 @@ list_node_t* list_insert(list_t* list, void* data)
 {
     /* IMPLEMENT THIS */
     list_node_t* new_node = (list_node_t*)malloc(sizeof(list_node_t));
+    //current node
     list_node_t* temp = list->head;
+    //Getting new node setup
     new_node->data = data;
     new_node->prev = temp;
+    //Setting current node to new node
     list->head = new_node;
     return new_node;
 }
@@ -134,13 +131,10 @@ void list_remove(list_t* list, list_node_t* node)
     int index = 0;
     list_node_t* remove_node = list->head;
     while(index <= list->count){
-        
         if(remove_node == node){
-            list->head = remove_node->next;
+            remove_node->prev->next = remove_node->next;
             free(remove_node);
         }
-        remove_node = list->head;
-        list->head = list->head->next;
         index++;
     }
 }
