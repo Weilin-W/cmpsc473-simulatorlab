@@ -26,7 +26,6 @@ void list_destroy(list_t* list)
         index++;
     }
     //At last node, sets current node to NULL and free current node
-    free(list->head);
     free(list);
 }
 
@@ -111,12 +110,16 @@ list_node_t* list_insert(list_t* list, void* data)
         new_node->prev = NULL;
         list->head = new_node;
         list->tail = new_node;
+        list->count += 1;
+        return new_node;
     }
     //Compare function
     if(list->compare == NULL){
         new_node->next = list->head;
         list->head->prev = new_node;
         list->head = new_node;
+        list->count += 1;
+        return new_node;
     }
     while(temp != NULL){
         if(list->compare(temp->data,data) == 1){
@@ -126,15 +129,18 @@ list_node_t* list_insert(list_t* list, void* data)
                 new_node->next = list->head;
                 list->head->prev = new_node;
                 list->head = new_node;
+                list->count += 1;
                 break;
             }else if(temp == list->tail){
                 new_node->prev = temp;
                 temp->next = new_node;
+                list->count += 1;
                 break;
             }else{
                 new_node->next = temp;
                 temp->prev->next = new_node;
                 temp->prev = new_node;
+                list->count += 1;
                 break;
             }
         }
