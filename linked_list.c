@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include "linked_list.h"
-#include <stdio.h>
 
 // Creates and returns a new list
 // If compare is NULL, list_insert just inserts at the head
