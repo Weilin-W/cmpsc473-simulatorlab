@@ -1,5 +1,6 @@
 #include <stdlib.h>
 #include "linked_list.h"
+#include <stdio.h>
 
 // Creates and returns a new list
 // If compare is NULL, list_insert just inserts at the head
@@ -84,14 +85,12 @@ size_t list_count(list_t* list)
 list_node_t* list_find(list_t* list, void* data)
 {
     /* IMPLEMENT THIS */
-    int index = 0;
     list_node_t* temp = list->head;
-    while(index <= list->count){
+    while(temp != NULL){
         if(temp->data == data){
             return temp;
         }
         temp = temp->next;
-        index++;
     }
     return NULL;
 }
@@ -107,16 +106,40 @@ list_node_t* list_insert(list_t* list, void* data)
     
     //Getting new node setup
     new_node->data = data;
-    //Compare function
-    /*
-    if(typedef int (*compare_fn)(data,temp->data) == NULL){
+    //Deal with empty list
+    if(list->count == 0){
+        new_node->next = NULL;
+        new_node->prev = NULL;
         list->head = new_node;
-    }else{
+        list->tail = new_node;
+    }
+    //Compare function
+    if(list->compare == NULL){
+        new_node->next = list->head;
         list->head->prev = new_node;
-    }*/
-    //increment count
-    list->count += 1;
-    //Setting current node to new node
+        list->head = new_node;
+    }
+    while(temp != NULL){
+        if(list->compare(temp->data,data) == 1){
+            temp = temp->next;
+        }else if(list->compare(temp->data,data) == 0 || list->compare(temp->data,data) == -1){
+            if(temp == list->head){
+                new_node->next = list->head;
+                list->head->prev = new_node;
+                list->head = new_node;
+                break;
+            }else if(temp == list->tail){
+                new_node->prev = temp;
+                temp->next = new_node;
+                break;
+            }else{
+                new_node->next = temp;
+                temp->prev->next = new_node;
+                temp->prev = new_node;
+                break;
+            }
+        }
+    }
     return new_node;
 }
 
@@ -124,12 +147,28 @@ list_node_t* list_insert(list_t* list, void* data)
 void list_remove(list_t* list, list_node_t* node)
 {
     /* IMPLEMENT THIS */
-    int index = 0;
-    list_node_t* remove_node = list->head;
-    //think about
-    remove_node->prev->next = remove_node->next;
-    remove_node->next->prev = remove_node->prev;
-    //decrement count
-    list->count -= 1;
-    free(remove_node);
+    list_node_t* temp = list->head;
+    //
+    while(temp != NULL){
+        if(temp == node){
+            if(temp == list->head){
+                list->head = temp->next;
+                list->count -= 1;
+                free(node);
+                return;
+            }else if(temp == list->tail){
+                temp->prev = list->tail;
+                list->count -= 1;
+                free(node);
+                return;
+            }else if(temp->next != NULL && temp->prev != NULL){
+                temp->prev->next = temp->next;
+                temp->next->prev = temp->prev;
+                list->count -= 1;
+                free(node);
+                return;
+            }
+        }
+        temp = temp->next;
+    }
 }
