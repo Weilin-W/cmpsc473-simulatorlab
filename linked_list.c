@@ -122,9 +122,9 @@ list_node_t* list_insert(list_t* list, void* data)
         return new_node;
     }
     while(temp != NULL){
-        if(list->compare(temp->data,data) == 1){
+        if(list->compare(temp->data,data) == -1){
             temp = temp->next;
-        }else if(list->compare(temp->data,data) == 0 || list->compare(temp->data,data) == -1){
+        }else if(list->compare(temp->data,data) == 0 || list->compare(temp->data,data) == 1){
             //Head
             if(temp == list->head){
                 new_node->next = list->head;
@@ -144,8 +144,8 @@ list_node_t* list_insert(list_t* list, void* data)
         }
     }
     if(temp == NULL){
-        new_node->prev = temp;
-        temp->next = new_node;
+        new_node->prev = list->tail;
+        list->tail->next = new_node;
         list->tail = new_node;
         list->count += 1;
         return new_node;
