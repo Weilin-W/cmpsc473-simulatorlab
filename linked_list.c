@@ -125,25 +125,30 @@ list_node_t* list_insert(list_t* list, void* data)
         if(list->compare(temp->data,data) == 1){
             temp = temp->next;
         }else if(list->compare(temp->data,data) == 0 || list->compare(temp->data,data) == -1){
+            //Head
             if(temp == list->head){
                 new_node->next = list->head;
                 list->head->prev = new_node;
                 list->head = new_node;
                 list->count += 1;
-                break;
-            }else if(temp == list->tail){
-                new_node->prev = temp;
-                temp->next = new_node;
-                list->count += 1;
-                break;
+                return new_node;
+            //Middle
             }else{
                 new_node->next = temp;
                 temp->prev->next = new_node;
+                new_node->prev = temp->prev;
                 temp->prev = new_node;
                 list->count += 1;
-                break;
+                return new_node;
             }
         }
+    }
+    if(temp == NULL){
+        new_node->prev = temp;
+        temp->next = new_node;
+        list->tail = new_node;
+        list->count += 1;
+        return new_node;
     }
     return new_node;
 }
