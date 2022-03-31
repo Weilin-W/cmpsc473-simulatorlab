@@ -146,6 +146,7 @@ list_node_t* list_insert(list_t* list, void* data)
     if(temp == NULL){
         new_node->prev = list->tail;
         list->tail->next = new_node;
+        new_node->next = NULL;
         list->tail = new_node;
         list->count += 1;
         return new_node;
