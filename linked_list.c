@@ -159,18 +159,25 @@ list_node_t* list_insert(list_t* list, void* data)
 void list_remove(list_t* list, list_node_t* node)
 {
     /* IMPLEMENT THIS */
-    //prev->next
-    //next->prev
+    //Remove only node
+    if(list->count == 1){
+        list->head = NULL;
+        list->tail = NULL;
+    }
+    //Remove head
     if(node == list->head){
         list->head = node->next;
         list->head->prev = NULL;
+    //Remove tail
     }else if(node == list->tail){
-        list->tail = list->tail->prev;
+        list->tail = node->prev;
         list->tail->next = NULL;
+    //Remove in-between nodes
     }else if(node->next != NULL && node->prev != NULL){
         node->prev->next = node->next;
         node->next->prev = node->prev;
     }
+    //Decrement and free
     list->count -= 1;
     free(node);
 }
