@@ -125,7 +125,7 @@ list_node_t* list_insert(list_t* list, void* data)
         if(list->compare(temp->data,data) == -1){
             temp = temp->next;
         }else if(list->compare(temp->data,data) == 0 || list->compare(temp->data,data) == 1){
-            //Head
+            //At the beginning
             if(temp == list->head){
                 new_node->next = list->head;
                 list->head->prev = new_node;
@@ -143,6 +143,7 @@ list_node_t* list_insert(list_t* list, void* data)
             }
         }
     }
+    //Insert at the end
     if(temp == NULL){
         new_node->prev = list->tail;
         list->tail->next = new_node;
@@ -158,28 +159,18 @@ list_node_t* list_insert(list_t* list, void* data)
 void list_remove(list_t* list, list_node_t* node)
 {
     /* IMPLEMENT THIS */
-    list_node_t* temp = list->head;
-    //
-    while(temp != NULL){
-        if(temp == node){
-            if(temp == list->head){
-                list->head = temp->next;
-                list->count -= 1;
-                free(node);
-                return;
-            }else if(temp == list->tail){
-                temp->prev = list->tail;
-                list->count -= 1;
-                free(node);
-                return;
-            }else if(temp->next != NULL && temp->prev != NULL){
-                temp->prev->next = temp->next;
-                temp->next->prev = temp->prev;
-                list->count -= 1;
-                free(node);
-                return;
-            }
-        }
-        temp = temp->next;
+    //prev->next
+    //next->prev
+    if(node == list->head){
+        list->head = node->next;
+        list->head->prev = NULL;
+    }else if(node == list->tail){
+        list->tail = list->tail->prev;
+        list->tail->next = NULL;
+    }else if(node->next != NULL && node->prev != NULL){
+        node->prev->next = node->next;
+        node->next->prev = node->prev;
     }
+    list->count -= 1;
+    free(node);
 }
