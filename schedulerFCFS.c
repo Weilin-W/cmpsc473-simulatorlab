@@ -9,7 +9,6 @@ typedef struct {
     /* IMPLEMENT THIS */
     job_t* job;
     list_t* queue;
-    int time;
 } scheduler_FCFS_t;
 
 // Creates and returns scheduler specific info
@@ -22,7 +21,6 @@ void* schedulerFCFSCreate()
     /* IMPLEMENT THIS */
     info->queue = list_create(NULL);
     info->job = NULL;
-    info->time = 0;
     return info;
 }
 
@@ -45,10 +43,15 @@ void schedulerFCFSScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t
     scheduler_FCFS_t* info = (scheduler_FCFS_t*)schedulerInfo;
     /* IMPLEMENT THIS */
     //Fetched list, solve issue at which the job already being run
-    info->job = job;
-    uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
-    scheduler->schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
-    info->time = currentTime;
+    //Check current job equals null, then assign, list_insert(job) to queue call line 49
+    if(info->job == NULL){
+        info->job = job;
+        list_insert(info->queue, info->job);
+        uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
+        schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
+    }else{
+        list_insert(info->queue, info->job);
+    }
 }
 
 // Called to complete a job in response to an earlier call to schedulerScheduleNextCompletion
@@ -61,9 +64,19 @@ job_t* schedulerFCFSCompleteJob(void* schedulerInfo, scheduler_t* scheduler, uin
     scheduler_FCFS_t* info = (scheduler_FCFS_t*)schedulerInfo;
     /* IMPLEMENT THIS */
     //Next job: remove the completed job to the list and move to next job.
-    if(info->time == currentTime){
-        scheduler->schedulerCancelNextCompletion(currentTime);
+    //if job is complete, check queue, assign the tail to the job from queue
+    //if nothing after current job in the queue, set to NULL
+    //if completeJob called, 
+    job_t* temp = NULL;
+    if(info->job != NULL){ //Double check if valid
+        temp = info->job;
+        if(info->queue != NULL){
+            info->job = (job_t*)list_tail(info->queue);
+            uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
+            schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
+        }else{
+            info->job = NULL;
+        }
     }
-    list_next(info->job);
-    return (job_t* )info->job;
+    return temp;
 }
