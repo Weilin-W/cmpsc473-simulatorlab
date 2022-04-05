@@ -9,6 +9,7 @@ typedef struct {
     /* IMPLEMENT THIS */
     job_t* job;
     list_t* queue;
+    compare_fn compare;
 } scheduler_SJF_t;
 
 // Creates and returns scheduler specific info
@@ -19,6 +20,8 @@ void* schedulerSJFCreate()
         return NULL;
     }
     /* IMPLEMENT THIS */
+    info->queue = list_create(NULL);
+    info->job = NULL;
     return info;
 }
 
@@ -27,6 +30,7 @@ void schedulerSJFDestroy(void* schedulerInfo)
 {
     scheduler_SJF_t* info = (scheduler_SJF_t*)schedulerInfo;
     /* IMPLEMENT THIS */
+    list_destroy(info->queue);
     free(info);
 }
 
@@ -39,6 +43,14 @@ void schedulerSJFScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t*
 {
     scheduler_SJF_t* info = (scheduler_SJF_t*)schedulerInfo;
     /* IMPLEMENT THIS */
+    if(info->job == NULL){
+        info->job = job;
+        list_insert(info->queue, info->job);
+        uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
+        schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
+    }else{
+        list_insert(info->queue, job);
+    }
 }
 
 // Called to complete a job in response to an earlier call to schedulerScheduleNextCompletion
@@ -50,5 +62,20 @@ job_t* schedulerSJFCompleteJob(void* schedulerInfo, scheduler_t* scheduler, uint
 {
     scheduler_SJF_t* info = (scheduler_SJF_t*)schedulerInfo;
     /* IMPLEMENT THIS */
-    return NULL;
+    job_t* temp = NULL;
+    list_node_t* remove_node = list_find(info->queue, info->job);
+    temp = info->job;
+    list_remove(info->queue, remove_node);
+    if(list_count(info->queue) != 0){
+        /*
+        / Implementation for the [info->job = ?]
+        /
+        /
+        */
+        uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
+        schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
+    }else{
+        info->job = NULL;
+    }
+    return temp;
 }
