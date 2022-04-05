@@ -45,12 +45,12 @@ trace_test_type = 2
 def add_test_case_linked_list(test_name):
     test_cases[test_name] = {"TestType": linked_list_test_type, "args": ["./linked_list_test", test_name]}
 
-def add_test_case_valgrind(test_name):
+def add_test_case_linked_list_valgrind(test_name):
     test_cases[f"valgrind_{test_name}"] = {"TestType": linked_list_test_type, "args": ["valgrind", "-v", "--leak-check=full", "--errors-for-leak-kinds=all", "--error-exitcode=2", "./linked_list_test", test_name]}
 
 def add_test_cases(test_name):
     add_test_case_linked_list(test_name)
-    add_test_case_valgrind(test_name)
+    add_test_case_linked_list_valgrind(test_name)
 
 add_test_cases("test_list_create")
 add_test_cases("test_list_insert")
@@ -62,11 +62,17 @@ def add_test_cases_trace(test_name, policy, input_file):
     expected_outfile = f"{input_file}.expected"
     test_cases[test_name] = {"TestType": trace_test_type, "args": ["./simulator", input_file, output_file, policy], "output_file": output_file, "expected_outfile": expected_outfile}
 
-for f in os.listdir(os.path.join(original_dir, traces_dir)):
+def add_test_cases_trace_valgrind(test_name, policy, input_file):
+    output_file = f"{input_file}.out"
+    expected_outfile = f"{input_file}.expected"
+    test_cases[f"valgrind_{test_name}"] = {"TestType": trace_test_type, "args": ["valgrind", "-v", "--leak-check=full", "--errors-for-leak-kinds=all", "--error-exitcode=2", "./simulator", input_file, output_file, policy], "output_file": output_file, "expected_outfile": expected_outfile}
+
+for f in sorted(os.listdir(os.path.join(original_dir, traces_dir))):
     filename = os.fsdecode(f)
     if filename.endswith(".txt"):
         policy = filename.split("_", 1)[0]
         add_test_cases_trace(filename, policy, os.path.join(traces_dir, filename))
+        add_test_cases_trace_valgrind(filename, policy, os.path.join(traces_dir, filename))
 
 # Score breakdown by points (points, list of tests required to get points)
 part1_point_breakdown = [
@@ -84,14 +90,16 @@ part1 = ["FCFS", "LCFS", "SJF", "PLCFS"]
 part2_point_breakdown = []
 part2 = ["PSJF", "SRPT", "PS", "FB"]
 
-for f in os.listdir(os.path.join(original_dir, traces_dir)):
+for f in sorted(os.listdir(os.path.join(original_dir, traces_dir))):
     filename = os.fsdecode(f)
     if filename.endswith(".txt"):
         policy = filename.split("_", 1)[0]
         if policy in part1:
             part1_point_breakdown.append((1, [filename]))
+            part1_point_breakdown.append((1, [f"valgrind_{filename}"]))
         elif policy in part2:
             part2_point_breakdown.append((1, [filename]))
+            part2_point_breakdown.append((1, [f"valgrind_{filename}"]))
         else:
             print(f"Skipping trace {filename} since filename is not in appropriate format")
 
