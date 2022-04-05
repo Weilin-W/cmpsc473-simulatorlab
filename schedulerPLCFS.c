@@ -48,5 +48,7 @@ job_t* schedulerPLCFSCompleteJob(void* schedulerInfo, scheduler_t* scheduler, ui
 {
     scheduler_PLCFS_t* info = (scheduler_PLCFS_t*)schedulerInfo;
     /* IMPLEMENT THIS */
+    //Using cancelComplete
+    //If job currently running, lastest on preemptes the current job
     return NULL;
 }

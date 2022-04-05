@@ -5,6 +5,8 @@
 #include "linked_list.h"
 
 // SJF scheduler info
+typedef int (*compare_fn)(void* data1, void* data2);
+
 typedef struct {
     /* IMPLEMENT THIS */
     job_t* job;
@@ -69,9 +71,20 @@ job_t* schedulerSJFCompleteJob(void* schedulerInfo, scheduler_t* scheduler, uint
     if(list_count(info->queue) != 0){
         /*
         / Implementation for the [info->job = ?]
-        /
+        / Linked list sorts, getting short set equal the current job
         /
         */
+        job_t* temp_min_job = list_head(info->queue)->data;
+        list_node_t* temp_min_lst = list_head(info->queue);
+        while(temp_min_lst != NULL){
+            job_t* temp_job_lst = list_next(temp_min_lst)->data;
+            if(jobGetJobTime(temp_min_job) > jobGetJobTime(temp_job_lst)){
+                temp_min_job = temp_job_lst;
+            }
+            temp_min_lst = temp_min_lst->next;
+        }
+        
+        info->job = temp_min_job;
         uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
