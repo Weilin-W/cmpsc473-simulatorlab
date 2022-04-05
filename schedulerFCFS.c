@@ -50,7 +50,7 @@ void schedulerFCFSScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t
         uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
-        list_insert(info->queue, info->job);
+        list_insert(info->queue, job);
     }
 }
 
@@ -68,15 +68,15 @@ job_t* schedulerFCFSCompleteJob(void* schedulerInfo, scheduler_t* scheduler, uin
     //if nothing after current job in the queue, set to NULL
     //if completeJob called, 
     job_t* temp = NULL;
-    if(info->job != NULL){ //Double check if valid
-        temp = info->job;
-        if(info->queue != NULL){
-            info->job = (job_t*)list_tail(info->queue);
-            uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
-            schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
-        }else{
-            info->job = NULL;
-        }
+    list_node_t* remove_node = list_find(info->queue, info->job);
+    temp = info->job;
+    list_remove(info->queue, remove_node);
+    if(list_count(info->queue) != 0){
+        info->job = list_tail(info->queue)->data;
+        uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
+        schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
+    }else{
+        info->job = NULL;
     }
     return temp;
 }
