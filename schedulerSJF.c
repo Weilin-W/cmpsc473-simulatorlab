@@ -7,6 +7,8 @@
 // SJF scheduler info
 typedef struct {
     /* IMPLEMENT THIS */
+    job_t* job;
+    list_t* queue;
 } scheduler_SJF_t;
 
 // Creates and returns scheduler specific info
