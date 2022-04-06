@@ -77,13 +77,13 @@ job_t* schedulerSJFCompleteJob(void* schedulerInfo, scheduler_t* scheduler, uint
         job_t* temp_min_job = list_head(info->queue)->data;
         list_node_t* temp_min_lst = list_head(info->queue);
         while(temp_min_lst != NULL){
-            job_t* temp_job_lst = list_next(temp_min_lst)->data;
+            job_t* temp_job_lst = temp_min_lst->data;
             if(jobGetJobTime(temp_min_job) > jobGetJobTime(temp_job_lst)){
                 temp_min_job = temp_job_lst;
             }
             temp_min_lst = temp_min_lst->next;
         }
-        
+
         info->job = temp_min_job;
         uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
