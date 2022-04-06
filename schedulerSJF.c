@@ -11,7 +11,11 @@ int compare_Job(void* data1, void* data2){
     if(jobGetJobTime((job_t*)data1) > jobGetJobTime((job_t*)data2)){
         return 1;
     }else if(jobGetJobTime((job_t*)data1) == jobGetJobTime((job_t*)data2)){
-        return 0;
+        if(jobGetId((job_t*)data1) > jobGetId((job_t*)data2)){
+            return 1;
+        }else{
+            return -1;
+        }
     }else{
         return -1;
     }
