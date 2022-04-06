@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include "linked_list.h"
-#include <stdio.h>
+
 // Creates and returns a new list
 // If compare is NULL, list_insert just inserts at the head
 list_t* list_create(compare_fn compare)
@@ -166,6 +166,9 @@ list_node_t* list_insert(list_t* list, void* data)
 void list_remove(list_t* list, list_node_t* node)
 {
     /* IMPLEMENT THIS */
+    /*if(node == NULL || list->count == 0){
+        list->count = list->count + 1;
+    }*/
     //Remove only node
     if(list->count == 1){
         list->head = NULL;
@@ -181,8 +184,13 @@ void list_remove(list_t* list, list_node_t* node)
         list->tail = node->prev;
     //Remove in-between nodes
     }else{
-        node->prev->next = node->next;
-        node->next->prev = node->prev;
+        if(node != NULL){
+            node->prev->next = node->next;
+            node->next->prev = node->prev;
+        }else{
+            list->count = list->count + 1;
+        }
+        
     }
     //Decrement and free
     list->count = list->count - 1;
