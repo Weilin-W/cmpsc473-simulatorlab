@@ -1,16 +1,20 @@
 #include <stdlib.h>
 #include "linked_list.h"
-
+#include <stdio.h>
 // Creates and returns a new list
 // If compare is NULL, list_insert just inserts at the head
 list_t* list_create(compare_fn compare)
 {
     /* IMPLEMENT THIS */
     list_t* linked_list = (list_t*)malloc(sizeof(list_t));
+    if(compare == NULL){
+        linked_list->compare = NULL;
+    }else{
+        linked_list->compare = compare;
+    }
     linked_list->count = 0;
     linked_list->head = NULL;
     linked_list->tail = NULL;
-    linked_list->compare = compare;
     return linked_list;
 }
 
@@ -25,6 +29,7 @@ void list_destroy(list_t* list)
         list->head = temp;
         index++;
     }
+    list->count = 0;
     //At last node, sets current node to NULL and free current node
     free(list);
 }
@@ -110,7 +115,7 @@ list_node_t* list_insert(list_t* list, void* data)
         new_node->prev = NULL;
         list->head = new_node;
         list->tail = new_node;
-        list->count += 1;
+        list->count = list->count + 1;
         return new_node;
     }
     //Compare function
@@ -118,7 +123,8 @@ list_node_t* list_insert(list_t* list, void* data)
         new_node->next = list->head;
         list->head->prev = new_node;
         list->head = new_node;
-        list->count += 1;
+        list->head->prev = NULL;
+        list->count = list->count + 1;
         return new_node;
     }
     while(temp != NULL){
@@ -130,7 +136,8 @@ list_node_t* list_insert(list_t* list, void* data)
                 new_node->next = list->head;
                 list->head->prev = new_node;
                 list->head = new_node;
-                list->count += 1;
+                list->head->prev = NULL;
+                list->count = list->count + 1;
                 return new_node;
             //Middle
             }else{
@@ -138,7 +145,7 @@ list_node_t* list_insert(list_t* list, void* data)
                 temp->prev->next = new_node;
                 new_node->prev = temp->prev;
                 temp->prev = new_node;
-                list->count += 1;
+                list->count = list->count + 1;
                 return new_node;
             }
         }
@@ -149,7 +156,7 @@ list_node_t* list_insert(list_t* list, void* data)
         list->tail->next = new_node;
         new_node->next = NULL;
         list->tail = new_node;
-        list->count += 1;
+        list->count = list->count + 1;
         return new_node;
     }
     return new_node;
@@ -165,19 +172,19 @@ void list_remove(list_t* list, list_node_t* node)
         list->tail = NULL;
     }
     //Remove head
-    if(node == list->head){
+    else if(node == list->head){
+        node->next->prev = NULL;
         list->head = node->next;
-        list->head->prev = NULL;
     //Remove tail
     }else if(node == list->tail){
+        node->prev->next = NULL;
         list->tail = node->prev;
-        list->tail->next = NULL;
     //Remove in-between nodes
-    }else if(node->next != NULL && node->prev != NULL){
+    }else{
         node->prev->next = node->next;
         node->next->prev = node->prev;
     }
     //Decrement and free
-    list->count -= 1;
+    list->count = list->count - 1;
     free(node);
 }

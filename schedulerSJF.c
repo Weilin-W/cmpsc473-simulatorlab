@@ -5,13 +5,26 @@
 #include "linked_list.h"
 
 // SJF scheduler info
-typedef int (*compare_fn)(void* data1, void* data2);
+
+//Job compare function:
+int compare_Job(void* data1, void* data2){
+    if(jobGetJobTime((job_t*)data1) > jobGetJobTime((job_t*)data2)){
+        return 1;
+    }else if(jobGetJobTime((job_t*)data1) == jobGetJobTime((job_t*)data2)){
+        if(jobGetId((job_t*)data1) > jobGetId((job_t*)data2)){
+            return 1;
+        }else{
+            return -1;
+        }
+    }else{
+        return -1;
+    }
+}
 
 typedef struct {
     /* IMPLEMENT THIS */
     job_t* job;
     list_t* queue;
-    compare_fn compare;
 } scheduler_SJF_t;
 
 // Creates and returns scheduler specific info
@@ -22,7 +35,7 @@ void* schedulerSJFCreate()
         return NULL;
     }
     /* IMPLEMENT THIS */
-    info->queue = list_create(NULL);
+    info->queue = list_create(compare_Job);
     info->job = NULL;
     return info;
 }
@@ -74,17 +87,6 @@ job_t* schedulerSJFCompleteJob(void* schedulerInfo, scheduler_t* scheduler, uint
         / Linked list sorts, getting short set equal the current job
         /
         */
-        job_t* temp_min_job = list_head(info->queue)->data;
-        list_node_t* temp_min_lst = list_head(info->queue);
-        while(temp_min_lst != NULL){
-            job_t* temp_job_lst = temp_min_lst->data;
-            if(jobGetJobTime(temp_min_job) > jobGetJobTime(temp_job_lst)){
-                temp_min_job = temp_job_lst;
-            }
-            temp_min_lst = temp_min_lst->next;
-        }
-
-        info->job = temp_min_job;
         uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
