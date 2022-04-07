@@ -9,6 +9,7 @@ typedef struct {
     /* IMPLEMENT THIS */
     job_t* job;
     list_t* queue;
+    uint64_t arrive_timestamp;
 } scheduler_PLCFS_t;
 
 // Creates and returns scheduler specific info
@@ -21,6 +22,7 @@ void* schedulerPLCFSCreate()
     /* IMPLEMENT THIS */
     info->queue = list_create(NULL);
     info->job = NULL;
+    info->arrive_timestamp = 0;
     return info;
 }
 
@@ -30,6 +32,7 @@ void schedulerPLCFSDestroy(void* schedulerInfo)
     scheduler_PLCFS_t* info = (scheduler_PLCFS_t*)schedulerInfo;
     /* IMPLEMENT THIS */
     list_destroy(info->queue);
+    info->arrive_timestamp = 0;
     free(info);
 }
 
@@ -44,13 +47,19 @@ void schedulerPLCFSScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_
     /* IMPLEMENT THIS */
     if(info->job == NULL){
         info->job = job;
+        info->arrive_timestamp = currentTime;
         list_insert(info->queue, info->job);
-        uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
+        uint64_t jobCompletionTime = jobGetRemainingTime(info->job)+currentTime;
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
-        list_insert(info->queue, job);
+        uint64_t adjust_time = currentTime - info->arrive_timestamp;
+        uint64_t jobRemainingTime = jobGetRemainingTime(info->job) - adjust_time;
+        info->arrive_timestamp = currentTime;
+        jobSetRemainingTime(info->job, jobRemainingTime);
         schedulerCancelNextCompletion(scheduler);
-        uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
+        info->job = job;
+        list_insert(info->queue, info->job);
+        uint64_t jobCompletionTime = jobGetRemainingTime(info->job)+currentTime;
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }
 }
@@ -72,7 +81,8 @@ job_t* schedulerPLCFSCompleteJob(void* schedulerInfo, scheduler_t* scheduler, ui
     list_remove(info->queue, remove_node);
     if(list_count(info->queue) != 0){
         info->job = list_head(info->queue)->data;
-        uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
+        info->arrive_timestamp = currentTime;
+        uint64_t jobCompletionTime = jobGetRemainingTime(info->job)+currentTime;
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
         info->job = NULL;
