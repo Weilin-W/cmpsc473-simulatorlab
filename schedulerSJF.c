@@ -7,6 +7,10 @@
 // SJF scheduler info
 
 //Job compare function:
+//Compares job data1 and job data2
+//Return 1, if job data1 time is greater than the job data 2 time
+//If equal; check job ID
+//Else Return -1
 int compare_Job(void* data1, void* data2){
     if(jobGetJobTime((job_t*)data1) > jobGetJobTime((job_t*)data2)){
         return 1;
@@ -59,10 +63,12 @@ void schedulerSJFScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t*
     scheduler_SJF_t* info = (scheduler_SJF_t*)schedulerInfo;
     /* IMPLEMENT THIS */
     if(info->job == NULL){
+        //Update the current job, calculate the completion time and schedule
         info->job = job;
         uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
+        //If theres a current job, then just insert into the queue
         list_insert(info->queue, job);
     }
 }
@@ -79,11 +85,9 @@ job_t* schedulerSJFCompleteJob(void* schedulerInfo, scheduler_t* scheduler, uint
     job_t* temp = NULL;
     temp = info->job;
     if(list_count(info->queue) != 0){
-        /*
-        / Implementation for the [info->job = ?]
-        / Linked list sorts, getting short set equal the current job
-        /
-        */
+        //Set the current job to the head job of the queue
+        //Remove head node of the queue
+        //Calculate the Job completion time, and schedule
         info->job = list_head(info->queue)->data;
         list_remove(info->queue, list_head(info->queue));
         uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
@@ -91,5 +95,6 @@ job_t* schedulerSJFCompleteJob(void* schedulerInfo, scheduler_t* scheduler, uint
     }else{
         info->job = NULL;
     }
+    //Returns the job that is being completed
     return temp;
 }

@@ -42,12 +42,16 @@ void schedulerLCFSScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t
 {
     scheduler_LCFS_t* info = (scheduler_LCFS_t*)schedulerInfo;
     /* IMPLEMENT THIS */
+    //Check the current job
     if(info->job == NULL){
+        //Update the current job, and insert into the queue
+        //Calculate the completion time, and schedule
         info->job = job;
         list_insert(info->queue, info->job);
         uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
+        //When theres a current job, just insert the new job into the queue
         list_insert(info->queue, job);
     }
 }

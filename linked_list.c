@@ -7,11 +7,13 @@ list_t* list_create(compare_fn compare)
 {
     /* IMPLEMENT THIS */
     list_t* linked_list = (list_t*)malloc(sizeof(list_t));
+    //Check compare
     if(compare == NULL){
         linked_list->compare = NULL;
     }else{
         linked_list->compare = compare;
     }
+    //Initialize count, head, tail, and return a new list
     linked_list->count = 0;
     linked_list->head = NULL;
     linked_list->tail = NULL;
@@ -29,8 +31,9 @@ void list_destroy(list_t* list)
         list->head = temp;
         index++;
     }
+    //Reset the count
     list->count = 0;
-    //At last node, sets current node to NULL and free current node
+    //Free the list
     free(list);
 }
 
@@ -166,9 +169,6 @@ list_node_t* list_insert(list_t* list, void* data)
 void list_remove(list_t* list, list_node_t* node)
 {
     /* IMPLEMENT THIS */
-    /*if(node == NULL || list->count == 0){
-        list->count = list->count + 1;
-    }*/
     //Remove only node
     if(list->count == 1){
         list->head = NULL;
@@ -184,6 +184,7 @@ void list_remove(list_t* list, list_node_t* node)
         list->tail = node->prev;
     //Remove in-between nodes
     }else{
+        //Check for empty node input
         if(node != NULL){
             node->prev->next = node->next;
             node->next->prev = node->prev;
