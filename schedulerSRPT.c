@@ -28,6 +28,7 @@ typedef struct {
     /* IMPLEMENT THIS */
     job_t* job;
     list_t* queue;
+    uint64_t arrive_timestamp;
 } scheduler_SRPT_t;
 
 // Creates and returns scheduler specific info
@@ -64,11 +65,24 @@ void schedulerSRPTScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t
     if(info->job == NULL){
         //Update the current job, calculate the completion time and schedule
         info->job = job;
-        uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
+        info->arrive_timestamp = currentTime;
+        list_insert(info->queue, info->job);
+        uint64_t jobCompletionTime = jobGetRemainingTime(info->job)+currentTime;
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
-        //If theres a current job, then just insert into the queue
+        //Calculate the time that the job remains, cancel the next completion
+        //Update current job, and put into queue
+        uint64_t adjust_time = currentTime - info->arrive_timestamp;
+        uint64_t jobRemainingTime = jobGetRemainingTime(info->job) - adjust_time;
+        info->arrive_timestamp = currentTime;
+        jobSetRemainingTime(info->job, jobRemainingTime);
+        if(info->job != NULL){
+            schedulerCancelNextCompletion(scheduler);
+        }
         list_insert(info->queue, job);
+        info->job = list_head(info->queue)->data;
+        uint64_t jobCompletionTime = jobGetRemainingTime(info->job)+currentTime;
+        schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }
 }
 
@@ -83,16 +97,21 @@ job_t* schedulerSRPTCompleteJob(void* schedulerInfo, scheduler_t* scheduler, uin
     /* IMPLEMENT THIS */
     job_t* temp = NULL;
     temp = info->job;
+    if(info->job != NULL){
+        list_node_t* infoJob_node = list_find(info->queue, info->job);
+        list_remove(info->queue, infoJob_node);
+    }
     if(list_count(info->queue) != 0){
         //Set the current job to the head job of the queue
         //Remove head node of the queue
         //Calculate the Job completion time, and schedule
         info->job = list_head(info->queue)->data;
-        list_remove(info->queue, list_head(info->queue));
-        uint64_t jobCompletionTime = jobGetJobTime(info->job)+currentTime;
+        info->arrive_timestamp = currentTime;
+        uint64_t jobCompletionTime = jobGetRemainingTime(info->job)+currentTime;
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
         info->job = NULL;
+        info->arrive_timestamp = 0;
     }
     //Returns the job that is being completed
     return temp;
