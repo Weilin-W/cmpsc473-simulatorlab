@@ -30,6 +30,8 @@ typedef struct {
     uint64_t arrive_timestamp;
 } scheduler_PS_t;
 
+uint64_t prev_job_time = 0;
+
 // Creates and returns scheduler specific info
 void* schedulerPSCreate()
 {
@@ -65,12 +67,13 @@ void schedulerPSScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t* 
         //Update the current job, calculate the completion time and schedule
         info->job = job;
         list_insert(info->queue, info->job);
+        prev_job_time = jobGetArrivalTime(info->job);
         uint64_t unaccounted_time = jobGetArrivalTime(info->job);
         uint64_t adjust_time =  (currentTime) - info->arrive_timestamp;
-        uint64_t jobCompletionTime = (unaccounted_time + adjust_time) / list_count(info->queue);
+        uint64_t jobRemainingTime = (unaccounted_time + adjust_time) / list_count(info->queue);
         info->arrive_timestamp = currentTime;
-        uint64_t jobRemainingTime = jobGetRemainingTime(info->job) - 1;
-        jobSetRemainingTime(info->job, jobRemainingTime);
+        jobSetRemainingTime(info->job, jobRemainingTime - 1);
+        uint64_t jobCompletionTime = jobGetRemainingTime(info->job)+currentTime;
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
         //Calculate the time that the job remains, cancel the next completion
@@ -83,7 +86,8 @@ void schedulerPSScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t* 
             uint64_t jobRemainingTime = (unaccounted_time + adjust_time) % list_count(info->queue);
 
             info->arrive_timestamp = currentTime;
-            jobSetRemainingTime(info->job, jobRemainingTime);
+            jobSetRemainingTime(info->job, jobRemainingTime - prev_job_time);
+            prev_job_time = unaccounted_time;
             head_node = head_node->next;
         }
         if(info->job != NULL){
@@ -91,8 +95,7 @@ void schedulerPSScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t* 
         }
         list_insert(info->queue, job);
         info->job = list_head(info->queue)->data;
-        uint64_t adjust_time = info->arrive_timestamp - (currentTime);
-        uint64_t jobCompletionTime = (info->arrive_timestamp + adjust_time) % list_count(info->queue);
+        uint64_t jobCompletionTime = jobGetRemainingTime(info->job)+currentTime;
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }
 }
