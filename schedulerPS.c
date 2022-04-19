@@ -27,7 +27,7 @@ typedef struct {
     /* IMPLEMENT THIS */
     job_t* job;
     list_t* queue;
-    uint64_t arrive_timestamp;
+    //uint64_t arrive_timestamp;
 } scheduler_PS_t;
 
 uint64_t prev_job_time = 0;
@@ -68,34 +68,33 @@ void schedulerPSScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t* 
         info->job = job;
         list_insert(info->queue, info->job);
         prev_job_time = jobGetArrivalTime(info->job);
-        uint64_t unaccounted_time = jobGetArrivalTime(info->job);
-        uint64_t adjust_time =  (currentTime) - info->arrive_timestamp;
+        uint64_t unaccounted_time = (currentTime - jobGetArrivalTime(info->job)) % list_count(info->queue);
+        uint64_t adjust_time =  currentTime - jobGetArrivalTime(info->job);
         uint64_t jobRemainingTime = (unaccounted_time + adjust_time) / list_count(info->queue);
-        info->arrive_timestamp = currentTime;
+        //info->arrive_timestamp = currentTime;
         jobSetRemainingTime(info->job, jobRemainingTime - 1);
-        uint64_t jobCompletionTime = jobGetRemainingTime(info->job)+currentTime;
+        uint64_t jobCompletionTime = jobGetRemainingTime(list_tail(info->queue)->data) * list_count(info->queue) + (currentTime - jobGetArrivalTime(info->job));
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
         //Calculate the time that the job remains, cancel the next completion
         //Update current job, and put into queue
         //uint64_t adjust_time = currentTime - info->arrive_timestamp;
         list_node_t* head_node = list_head(info->queue);
+        uint64_t unaccounted_time = (currentTime - prev_job_time) % list_count(info->queue);
+        uint64_t adjust_time =  currentTime - jobGetArrivalTime(info->job);
+        uint64_t jobRemainingTime = (unaccounted_time + adjust_time) % list_count(info->queue);
         while(head_node != NULL){
-            uint64_t unaccounted_time = jobGetArrivalTime(info->job);
-            uint64_t adjust_time =  (currentTime) - info->arrive_timestamp;
-            uint64_t jobRemainingTime = (unaccounted_time + adjust_time) % list_count(info->queue);
-
-            info->arrive_timestamp = currentTime;
+            //info->arrive_timestamp = currentTime;
             jobSetRemainingTime(info->job, jobRemainingTime - prev_job_time);
-            prev_job_time = unaccounted_time;
+            prev_job_time = jobGetArrivalTime(info->job);
             head_node = head_node->next;
         }
         if(info->job != NULL){
             schedulerCancelNextCompletion(scheduler);
         }
         list_insert(info->queue, job);
-        info->job = list_head(info->queue)->data;
-        uint64_t jobCompletionTime = jobGetRemainingTime(info->job)+currentTime;
+        info->job = list_tail(info->queue)->data;
+        uint64_t jobCompletionTime = jobGetRemainingTime(list_tail(info->queue)->data) * list_count(info->queue) + (currentTime - jobGetArrivalTime(info->job));
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }
 }
@@ -114,18 +113,29 @@ job_t* schedulerPSCompleteJob(void* schedulerInfo, scheduler_t* scheduler, uint6
     if(info->job != NULL){
         list_node_t* infoJob_node = list_find(info->queue, info->job);
         list_remove(info->queue, infoJob_node);
+        
     }
     if(list_count(info->queue) != 0){
         //Set the current job to the head job of the queue
         //Remove head node of the queue
         //Calculate the Job completion time, and schedule
-        info->job = list_head(info->queue)->data;
-        info->arrive_timestamp = currentTime;
-        uint64_t jobCompletionTime = jobGetRemainingTime(info->job)+currentTime;
+        info->job = list_tail(info->queue)->data;
+        //info->arrive_timestamp = currentTime;
+        list_node_t* head_node = list_head(info->queue);
+        uint64_t unaccounted_time = currentTime - prev_job_time % list_count(info->queue);
+        uint64_t adjust_time =  currentTime - jobGetArrivalTime(info->job);
+        uint64_t jobRemainingTime = (unaccounted_time + adjust_time) % list_count(info->queue);
+        while(head_node != NULL){
+            //info->arrive_timestamp = currentTime;
+            jobSetRemainingTime(info->job, jobRemainingTime - prev_job_time);
+            prev_job_time = jobGetArrivalTime(info->job);
+            head_node = head_node->next;
+        }
+        uint64_t jobCompletionTime = jobGetRemainingTime(list_tail(info->queue)->data) * list_count(info->queue) + (currentTime - jobGetArrivalTime(info->job));
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
         info->job = NULL;
-        info->arrive_timestamp = 0;
+        //info->arrive_timestamp = 0;
     }
     //Returns the job that is being completed
     return temp;
