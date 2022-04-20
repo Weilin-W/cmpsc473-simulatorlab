@@ -27,9 +27,11 @@ typedef struct {
     /* IMPLEMENT THIS */
     job_t* job;
     list_t* queue;
+    uint64_t remainder_unaccounted_time;
     //uint64_t arrive_timestamp;
 } scheduler_PS_t;
 
+//Previous Job arrival time
 uint64_t prev_job_time = 0;
 
 // Creates and returns scheduler specific info
@@ -67,13 +69,12 @@ void schedulerPSScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t* 
         //Update the current job, calculate the completion time and schedule
         info->job = job;
         list_insert(info->queue, info->job);
+        uint64_t jobRemainingTime = 0;
         prev_job_time = jobGetArrivalTime(info->job);
-        uint64_t unaccounted_time = (currentTime - jobGetArrivalTime(info->job)) % list_count(info->queue);
-        uint64_t adjust_time =  currentTime - jobGetArrivalTime(info->job);
-        uint64_t jobRemainingTime = (unaccounted_time + adjust_time) / list_count(info->queue);
+        //More in the next 
         //info->arrive_timestamp = currentTime;
-        jobSetRemainingTime(info->job, jobRemainingTime - 1);
-        uint64_t jobCompletionTime = jobGetRemainingTime(list_tail(info->queue)->data) * list_count(info->queue) + (currentTime - jobGetArrivalTime(info->job));
+        //The amount of time elapes
+        uint64_t jobCompletionTime = currentTime + jobGetJobTime(info->job);
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
         //Calculate the time that the job remains, cancel the next completion
@@ -81,7 +82,7 @@ void schedulerPSScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t* 
         //uint64_t adjust_time = currentTime - info->arrive_timestamp;
         list_node_t* head_node = list_head(info->queue);
         uint64_t unaccounted_time = (currentTime - prev_job_time) % list_count(info->queue);
-        uint64_t adjust_time =  currentTime - jobGetArrivalTime(info->job);
+        uint64_t adjust_time =  currentTime - jobGetArrivalTime(info->job); //issue
         uint64_t jobRemainingTime = (unaccounted_time + adjust_time) % list_count(info->queue);
         while(head_node != NULL){
             //info->arrive_timestamp = currentTime;
