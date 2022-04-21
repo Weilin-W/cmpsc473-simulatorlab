@@ -69,11 +69,7 @@ void schedulerPSScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t* 
         //Update the current job, calculate the completion time and schedule
         info->job = job;
         list_insert(info->queue, info->job);
-        uint64_t jobRemainingTime = 0;
         prev_job_time = jobGetArrivalTime(info->job);
-        //More in the next 
-        //info->arrive_timestamp = currentTime;
-        //The amount of time elapes
         uint64_t jobCompletionTime = currentTime + jobGetJobTime(info->job);
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
@@ -81,21 +77,24 @@ void schedulerPSScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t* 
         //Update current job, and put into queue
         //uint64_t adjust_time = currentTime - info->arrive_timestamp;
         list_node_t* head_node = list_head(info->queue);
-        uint64_t unaccounted_time = (currentTime - prev_job_time) % list_count(info->queue);
-        uint64_t adjust_time =  currentTime - jobGetArrivalTime(info->job); //issue
-        uint64_t jobRemainingTime = (unaccounted_time + adjust_time) % list_count(info->queue);
+        //Current time minus the start time of the job
+        uint64_t adjust_time =  currentTime - jobGetArrivalTime(info->job);
+        uint64_t unaccounted_time = (info->remainder_unaccounted_time + (adjust_time)) / list_count(info->queue);
+        uint64_t jobRemainingTime = jobGetRemainingTime(info->job);
         while(head_node != NULL){
             //info->arrive_timestamp = currentTime;
             jobSetRemainingTime(info->job, jobRemainingTime - prev_job_time);
             prev_job_time = jobGetArrivalTime(info->job);
+            info->remainder_unaccounted_time += unaccounted_time;
             head_node = head_node->next;
         }
+        unaccounted_time = (unaccounted_time + (currentTime - prev_job_time)) % list_count(info->queue);
         if(info->job != NULL){
             schedulerCancelNextCompletion(scheduler);
         }
         list_insert(info->queue, job);
         info->job = list_tail(info->queue)->data;
-        uint64_t jobCompletionTime = jobGetRemainingTime(list_tail(info->queue)->data) * list_count(info->queue) + (currentTime - jobGetArrivalTime(info->job));
+        uint64_t jobCompletionTime = jobGetRemainingTime(list_tail(info->queue)->data) * list_count(info->queue) + (currentTime - unaccounted_time);
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }
 }
@@ -123,16 +122,18 @@ job_t* schedulerPSCompleteJob(void* schedulerInfo, scheduler_t* scheduler, uint6
         info->job = list_tail(info->queue)->data;
         //info->arrive_timestamp = currentTime;
         list_node_t* head_node = list_head(info->queue);
-        uint64_t unaccounted_time = currentTime - prev_job_time % list_count(info->queue);
         uint64_t adjust_time =  currentTime - jobGetArrivalTime(info->job);
-        uint64_t jobRemainingTime = (unaccounted_time + adjust_time) % list_count(info->queue);
+        uint64_t unaccounted_time = (info->remainder_unaccounted_time + (adjust_time)) / list_count(info->queue);
+        uint64_t jobRemainingTime = jobGetRemainingTime(info->job);
         while(head_node != NULL){
             //info->arrive_timestamp = currentTime;
             jobSetRemainingTime(info->job, jobRemainingTime - prev_job_time);
             prev_job_time = jobGetArrivalTime(info->job);
+            info->remainder_unaccounted_time += unaccounted_time;
             head_node = head_node->next;
         }
-        uint64_t jobCompletionTime = jobGetRemainingTime(list_tail(info->queue)->data) * list_count(info->queue) + (currentTime - jobGetArrivalTime(info->job));
+        unaccounted_time = (unaccounted_time + (currentTime - prev_job_time)) % list_count(info->queue);
+        uint64_t jobCompletionTime = jobGetRemainingTime(list_tail(info->queue)->data) * list_count(info->queue) + (currentTime - unaccounted_time);
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
         info->job = NULL;
