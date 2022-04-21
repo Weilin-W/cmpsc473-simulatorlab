@@ -28,7 +28,6 @@ typedef struct {
     job_t* job;
     list_t* queue;
     uint64_t remainder_unaccounted_time;
-    //uint64_t arrive_timestamp;
 } scheduler_PS_t;
 
 //Previous Job arrival time
@@ -75,14 +74,12 @@ void schedulerPSScheduleJob(void* schedulerInfo, scheduler_t* scheduler, job_t* 
     }else{
         //Calculate the time that the job remains, cancel the next completion
         //Update current job, and put into queue
-        //uint64_t adjust_time = currentTime - info->arrive_timestamp;
         list_node_t* head_node = list_head(info->queue);
         //Current time minus the start time of the job
         uint64_t adjust_time =  currentTime - jobGetArrivalTime(info->job);
         uint64_t unaccounted_time = (info->remainder_unaccounted_time + (adjust_time)) / list_count(info->queue);
         uint64_t jobRemainingTime = jobGetRemainingTime(info->job);
         while(head_node != NULL){
-            //info->arrive_timestamp = currentTime;
             jobSetRemainingTime(info->job, jobRemainingTime - prev_job_time);
             prev_job_time = jobGetArrivalTime(info->job);
             info->remainder_unaccounted_time += unaccounted_time;
@@ -120,13 +117,11 @@ job_t* schedulerPSCompleteJob(void* schedulerInfo, scheduler_t* scheduler, uint6
         //Remove head node of the queue
         //Calculate the Job completion time, and schedule
         info->job = list_tail(info->queue)->data;
-        //info->arrive_timestamp = currentTime;
         list_node_t* head_node = list_head(info->queue);
         uint64_t adjust_time =  currentTime - jobGetArrivalTime(info->job);
         uint64_t unaccounted_time = (info->remainder_unaccounted_time + (adjust_time)) / list_count(info->queue);
         uint64_t jobRemainingTime = jobGetRemainingTime(info->job);
         while(head_node != NULL){
-            //info->arrive_timestamp = currentTime;
             jobSetRemainingTime(info->job, jobRemainingTime - prev_job_time);
             prev_job_time = jobGetArrivalTime(info->job);
             info->remainder_unaccounted_time += unaccounted_time;
@@ -137,7 +132,6 @@ job_t* schedulerPSCompleteJob(void* schedulerInfo, scheduler_t* scheduler, uint6
         schedulerScheduleNextCompletion(scheduler, jobCompletionTime);
     }else{
         info->job = NULL;
-        //info->arrive_timestamp = 0;
     }
     //Returns the job that is being completed
     return temp;
